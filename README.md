@@ -3,8 +3,8 @@ CONNEXION AU SERVEUR
 
 Serveur de connexion :
 
-user: <user>
-password: <ask_for_password>
+    user: <user>
+    password: <ask_for_password>
 
 DEPLOIEMENT MANUEL DE L'APPLICATION
 
@@ -112,78 +112,78 @@ N.B. : pour "db", bien mettre les même credentials qu'en local
 
 database.yml : 
 
-  version: '3'
-  services:
-    database:
-      image: postgres:latest
-      container_name: crafted_by_db
-      restart: always
-      ports:
-        - 5432:5432
-      volumes:
-        - ./crafted_by_db:/var/lib/postgresql/data
-      environment:
-        - POSTGRES_PASSWORD=password
-        - POSTGRES_USER=nicolas
-        - POSTGRES_DB=crafted_by
-        - PGDATA=/var/lib/postgresql/data/
+      version: '3'
+      services:
+        database:
+          image: postgres:latest
+          container_name: crafted_by_db
+          restart: always
+          ports:
+            - 5432:5432
+          volumes:
+            - ./crafted_by_db:/var/lib/postgresql/data
+          environment:
+            - POSTGRES_PASSWORD=password
+            - POSTGRES_USER=nicolas
+            - POSTGRES_DB=crafted_by
+            - PGDATA=/var/lib/postgresql/data/
 
 backend.yml : 
 
-  version: '3'
-  services:
-    backend:
-      image: nicolashureau/crafted_by_api:latest
-      container_name: crafted_by_api
-      ports:
-        - 8080:80
-      environment:
-        DB_HOST: crafted_by_db
+      version: '3'
+      services:
+        backend:
+          image: nicolashureau/crafted_by_api:latest
+          container_name: crafted_by_api
+          ports:
+            - 8080:80
+          environment:
+            DB_HOST: crafted_by_db
 
 frontend.yml : 
 
-  version: '3'
-  services:
-    frontend:
-      image: nicolashureau/crafted_by_spa:v1.0.4
-      container_name: crafted_by_spa
-      ports:
-        - 5173:80
-      environment:
-        VITE_API_ENDPOINT: https://api.elaboradopor.com/api/
+      version: '3'
+      services:
+        frontend:
+          image: nicolashureau/crafted_by_spa:v1.0.4
+          container_name: crafted_by_spa
+          ports:
+            - 5173:80
+          environment:
+            VITE_API_ENDPOINT: https://api.elaboradopor.com/api/
 
 traefik.yml :
 
-  api:
-    dashboard: true
-    debug: true
-  
-  entryPoints:
-    http:
-      address: ":80"
-    https:
-      address: ":443"
-  
-  providers:
-    docker:
-      endpoint: "unix:///var/run/docker.sock"
-      exposedByDefault: false
-  log:
-    level: "ERROR"
-    filePath: "log/error.log"
-    format: "json"
-  
-  accessLog:
-    filePath: "log/access.log"
-    format: "json"
-  
-  certificatesResolvers:
-    http:
-      acme:
-        email: nicolas.hureau@campus-numerique.fr
-        storage: acme.json
-        httpChallenge:
-          entryPoint: http
+      api:
+        dashboard: true
+        debug: true
+      
+      entryPoints:
+        http:
+          address: ":80"
+        https:
+          address: ":443"
+      
+      providers:
+        docker:
+          endpoint: "unix:///var/run/docker.sock"
+          exposedByDefault: false
+      log:
+        level: "ERROR"
+        filePath: "log/error.log"
+        format: "json"
+      
+      accessLog:
+        filePath: "log/access.log"
+        format: "json"
+      
+      certificatesResolvers:
+        http:
+          acme:
+            email: nicolas.hureau@campus-numerique.fr
+            storage: acme.json
+            httpChallenge:
+              entryPoint: http
 
 Une fois cette étape réalisée :
 
