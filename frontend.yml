@@ -1,0 +1,9 @@
+version: '3'
+services:
+  frontend:
+    image: nicolashureau/crafted_by_spa:v1.0.4
+    container_name: crafted_by_spa
+    ports:
+      - 5173:80
+    environment:
+      VITE_API_ENDPOINT: https://api.elaboradopor.com/api/
