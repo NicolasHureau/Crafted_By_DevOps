@@ -1,0 +1,15 @@
+version: '3'
+services:
+  database:
+    image: postgres:latest
+    container_name: crafted_by_db
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - ./crafted_by_db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=nicolas
+      - POSTGRES_DB=crafted_by
+      - PGDATA=/var/lib/postgresql/data/
