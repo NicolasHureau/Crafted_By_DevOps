@@ -1,0 +1,9 @@
+version: '3'
+services:
+  backend:
+    image: nicolashureau/crafted_by_api:latest
+    container_name: crafted_by_api
+    ports:
+      - 8080:80
+    environment:
+      DB_HOST: crafted_by_db
