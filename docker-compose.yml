@@ -1,1 +1,82 @@
-version: '3.9'services:    db:        container_name: crafted_by_db        image: postgres:latest        restart: always        ports:          - 5432:5432        volumes:          - ./crafted_by_db:/var/lib/postgresql/data        environment:          - POSTGRES_PASSWORD=password          - POSTGRES_USER=nicolas          - POSTGRES_DB=crafted_by          - PGDATA=/var/lib/postgresql/data/    api:        container_name: crafted_by_api        image: crafted_by_api        build:            context: .            dockerfile: Dockerfile        ports:            - "8080:80"        environment:            DB_HOST: crafted_by_db                spa:        container_name: crafted_by_spa        image: crafted_by_spa        build:            context: .            dockerfile: Dockerfile        ports:            - "5173:80"        environment:            VITE_API_ENDPOINT: "http://localhost:8080/api/"
+services:
+
+  traefik:
+    image: traefik:v2.2
+    networks:
+      - traefik-proxy
+    command:
+      - --api.insecure=true
+      - --api.dashboard=true
+      - --api.debug=true
+      - --log.level=DEBUG
+
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=traefik-proxy
+
+      - --entrypoints.http.address=:80
+      - --entrypoints.https.address=:443
+
+      - --certificatesresolvers.tls.acme.tlschallenge=true
+      - --certificatesresolvers.tls.acme.email=contact@mon-domaine.com
+      - --certificatesresolvers.tls.acme.storage=/letsencrypt/acme.json
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./letsencrypt:/letsencrypt"
+    labels:
+      - "traefik.enable=true"
+
+      - "traefik.http.middlewares.http_to_https.redirectscheme.scheme=https"
+
+      - "traefik.http.middlewares.auth.basicauth.users=test:$$2y$$12$$iPbYdyAEZbyTYjEEU5Bneu/GKrciqcwYtZqZJwUxHsjgfrRXrBEEW"
+
+      - "traefik.http.routers.monitor.rule=Host(`traefik.elaboradopor.com`)"
+      - "traefik.http.routers.monitor.entrypoints=http"
+      - "traefik.http.routers.monitor.middlewares=http_to_https@docker"
+
+      - "traefik.http.routers.monitor-secured.rule=Host(`traefik.elaboradopor.com`)"
+      - "traefik.http.routers.monitor-secured.service=api@internal"
+      - "traefik.http.routers.monitor-secured.entrypoints=https"
+      - "traefik.http.routers.monitor-secured.tls=true"
+      - "traefik.http.routers.monitor-secured.tls.certresolver=tls"
+      - "traefik.http.routers.monitor-secured.middlewares=auth@docker"
+
+  crafted_by_db:
+    extends:
+      file: database.yml
+      service: database
+    networks:
+      - traefik-proxy
+
+  crafted_by_api:
+    extends:
+      file: backend.yml
+      service: backend
+    networks:
+      - traefik-proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api-secured.rule=Host(`api.elaboradopor.com`)"
+      - "traefik.http.routers.api-secured.entrypoints=https"
+      - "traefik.http.routers.api-secured.tls=true"
+      - "traefik.http.routers.api-secured.tls.certresolver=tls"
+
+  crafted_by_spa:
+    extends:
+      file: frontend.yml
+      service: frontend
+    networks:
+      - traefik-proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.spa-secured.rule=Host(`elaboradopor.com`)"
+      - "traefik.http.routers.spa-secured.entrypoints=https"
+      - "traefik.http.routers.spa-secured.tls=true"
+      - "traefik.http.routers.spa-secured.tls.certresolver=tls"
+
+networks:
+  traefik-proxy:
+    name: traefik-proxy
